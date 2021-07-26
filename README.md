@@ -1,5 +1,5 @@
 # wallet-groomer
-Collects small transactions in a QT wallet into larger ones. This tool has been updated for Ravencoin, but should work on other coins using a BTC-forked QT wallet.
+Collects small transactions in a QT wallet into larger ones. This tool has been updated for Antimony Coin, but should work on other coins using a BTC-forked QT wallet.
 
 ## Requirements:
 
