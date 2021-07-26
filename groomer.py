@@ -1,6 +1,7 @@
 #!/usr/bin/python2
 # simple cleanup script, 2012-12-25 <greg@xiph.org>
 # 2018: updated by brianmct
+# 2021: modified to fit ATMN by bigtrevs98
 import sys
 import operator
 from decimal import *
@@ -10,17 +11,17 @@ import argparse
 parser = argparse.ArgumentParser(description='This script generates transaction(s) to cleanup your wallet.\n'
 'It looks for the single addresses which have the most small confirmed payments made to them and merges\n'
 'all those payments, along with those for any addresses which are all tiny payments, to a single txout.\n'
-'It must connect to raven to inspect your wallet and to get fresh addresses to pay your coin to.')
+'It must connect to Antimony to inspect your wallet and to get fresh addresses to pay your coin to.')
 parser.add_argument('rpc_server', type=str, help='Wallet RPC server info. '
                     'Example: http://user:password@127.0.0.1:8766')
-parser.add_argument('-i', '--max_amt_input', type=float, default=25,
-  help='The maximum input amount of a single transaction to consolidate (default: 25 RVN)')
-parser.add_argument('-n', '--max_num_tx', type=int, default=500,
-  help='The maximum number of transactions to consolidate at once. Lower this if you are getting a tx-size error (default: 500)')
-parser.add_argument('-o', '--max_amt_per_output', type=float, default=10000,
-  help='The maximum amount (in RVN) to send to a single output address (default: 10000 RVN)')
+parser.add_argument('-i', '--max_amt_input', type=float, default=60,
+  help='The maximum input amount of a single transaction to consolidate (default: 60 ATMN)')
+parser.add_argument('-n', '--max_num_tx', type=int, default=250,
+  help='The maximum number of transactions to consolidate at once. Lower this if you are getting a tx-size error (default: 250)')
+parser.add_argument('-o', '--max_amt_per_output', type=float, default=100000,
+  help='The maximum amount (in RVN) to send to a single output address (default: 100000 ATMN)')
 parser.add_argument('-f', '--fee', type=float, default=0.001,
-  help='The amount of fees (in RVN) to use for the transaction')
+  help='The amount of fees (in ATMN) to use for the transaction')
 
 args = parser.parse_args()
 
@@ -28,7 +29,7 @@ try:
   b = AuthServiceProxy(args.rpc_server)
   b.getinfo()
 except:
-  print "Couldn't connect to raven"
+  print "Couldn't connect to antimony"
   exit(1)
 min_fee=Decimal(args.fee)
 
@@ -74,12 +75,12 @@ while True:
       txouts.append(txout)
   print 'Creating tx from %d inputs of total value %s:'%(len(txouts),amt)
   for script in usescripts:
-    print '  Script %s has %d txins and %s RVN value.'%(script,scripts[script][2],str(scripts[script][1]))
+    print '  Script %s has %d txins and %s ATMN value.'%(script,scripts[script][2],str(scripts[script][1]))
 
   out={}
   na=amt-min_fee
-  #One new output per max_amt_per_output RVN of value to avoid consolidating too much value in too few addresses.
-  # But don't add an extra output if it would have less than args.max_amt_per_output RVN.
+  #One new output per max_amt_per_output ATMN of value to avoid consolidating too much value in too few addresses.
+  # But don't add an extra output if it would have less than args.max_amt_per_output ATMN.
   while na>0:
     amount=min(Decimal(args.max_amt_per_output),na)
     if ((na-amount)<10):
@@ -90,7 +91,7 @@ while True:
         out[addr]=float(0)
       out[addr]+=float(amount)
     na-=Decimal(str(float(amount)))
-  print 'Paying %s RVN (%s fee) to:'%(sum([Decimal(str(out[k])) for k in out.keys()]),amt-sum([Decimal(str(out[k])) for k in out.keys()]))
+  print 'Paying %s ATMN (%s fee) to:'%(sum([Decimal(str(out[k])) for k in out.keys()]),amt-sum([Decimal(str(out[k])) for k in out.keys()]))
   for o in out.keys():
     print '  %s %s'%(o,out[o])
 
